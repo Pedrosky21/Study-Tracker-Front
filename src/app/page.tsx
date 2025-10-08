@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Nav from "./components/nav";
 import Link from "next/link";
+import { getSubjects } from "./services/subjectService";
 
 interface User {
   nickname?: string;
@@ -10,11 +11,22 @@ interface User {
   email?: string;
 }
 
-interface Subject {
+interface Topic {
+  id: number;
   title: string;
-  description: string;
-  userID: number;
-  imageURL: string;
+}
+
+interface Unit {
+  id: number;
+  name: string;
+  topics: Topic[];
+}
+
+interface Subject {
+  id: number;
+  title: string;
+  description?: string;
+  units: Unit[];
 }
 
 export default function Home() {
@@ -43,10 +55,12 @@ export default function Home() {
     };
 
     const fetchSubjects = async () => {
-      const res = await fetch("http://localhost:3001/subjects/getAll");
-      const data = await res.json();
-      if (data) {
+      try {
+        const data = await getSubjects();
+        console.log(data);
         setSubjects(data);
+      } catch (error) {
+        console.error("No se pudieron cargar las materias", error);
       }
     };
 
@@ -118,14 +132,14 @@ export default function Home() {
           </div>
         </div>
         <div className="flex justify-center mt-2">
-          <div className="flex flex-col justify-between bg-gray-300 w-5/6 h-96 rounded-xl px-4 py-3">
+          <div className="flex flex-col justify-between bg-gray-300 w-5/6 min-h-96 rounded-xl px-2 py-3 mb-5">
             <div className="w-full">
               {subjects && subjects.length > 0 ? (
                 <ul>
                   {subjects.map((sub, index) => (
-                    <li key={index} className="p-2 border-b border-gray-300">
-                      <p className="font-bold">{sub.title}</p>
-                      <p className="text-gray-700">{sub.description}</p>
+                    <li key={index} className="p-2 bg-white mb-3 rounded-xl">
+                      <p className="text-xl">{sub.title}</p>
+                      <p className="text-gray-700">{`${sub.units.length} unidades`}</p>
                     </li>
                   ))}
                 </ul>
@@ -134,7 +148,10 @@ export default function Home() {
               )}
             </div>
             <div className="w-full flex justify-center">
-              <Link href="/createSubject" className="bg-dark-green rounded-xl p-2 text-white">
+              <Link
+                href="/createSubject"
+                className="bg-dark-green rounded-xl p-2 text-white"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"

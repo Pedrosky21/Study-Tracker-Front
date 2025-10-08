@@ -4,31 +4,14 @@ import Nav from "../components/nav";
 import axios from "axios";
 import { useState } from "react";
 
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  useSortable,
-  arrayMove,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-
-import SortableTopic from "../components/sortableTopic";
-
 type Topic = {
   id: number;
-  name: string;
+  title: string;
 };
 
 type Unit = {
   id: number;
-  name: string;
+  title: string;
   topics: Topic[];
 };
 
@@ -36,19 +19,19 @@ export default function SubjectForm() {
   const [subjectName, setSubjectName] = useState("");
   const [subjectDesc, setSubjectDesc] = useState("");
   const [units, setUnits] = useState<Unit[]>([
-    { id: 0, name: "", topics: [{ id: 0, name: "" }] },
+    { id: 1, title: "", topics: [{ id: 1, title: "" }] },
   ]);
-  const [unitCounter, setUnitCounter] = useState(1);
-  const [topicCounter, setTopicCounter] = useState(1);
+  const [unitCounter, setUnitCounter] = useState(2);
+  const [topicCounter, setTopicCounter] = useState(2);
 
   const addUnit = (unitName: string) => {
-    setUnits([...units, { id: unitCounter, name: unitName, topics: [] }]);
+    setUnits([...units, { id: unitCounter, title: unitName, topics: [] }]);
     setUnitCounter(unitCounter + 1);
   };
 
   const changeUnitName = (unitIndex: number, value: string) => {
     const newUnits = [...units];
-    newUnits[unitIndex].name = value;
+    newUnits[unitIndex].title = value;
     setUnits(newUnits);
   };
 
@@ -60,7 +43,7 @@ export default function SubjectForm() {
 
   const addTopic = (unitIndex: number, topicName: string) => {
     const newUnits = [...units];
-    newUnits[unitIndex].topics.push({ id: topicCounter, name: topicName });
+    newUnits[unitIndex].topics.push({ id: topicCounter, title: topicName });
     setUnits(newUnits);
     setTopicCounter(topicCounter + 1);
   };
@@ -71,7 +54,7 @@ export default function SubjectForm() {
     value: string
   ) => {
     const newUnits = [...units];
-    newUnits[unitIndex].topics[topicIndex].name = value;
+    newUnits[unitIndex].topics[topicIndex].title = value;
     setUnits(newUnits);
   };
 
@@ -81,14 +64,50 @@ export default function SubjectForm() {
     setUnits(newUnits);
   };
 
+  const isFormValid = (): boolean => {
+    if (!subjectName.trim()) return false;
+    if (units.length === 0) return false;
+
+    for (const unit of units) {
+      if (!unit.title.trim()) return false;
+      if (unit.topics.length > 0) {
+        for (const topic of unit.topics) {
+          if (!topic.title.trim()) return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const subjectData = {
+      title: subjectName,
+      description: subjectDesc,
+      units: units.map((unit, unitIndex) => {
+        return {
+          title: unit.title,
+          order: unitIndex,
+          topics: unit.topics.map((topic, topicIndex) => {
+            return {
+              title: topic.title,
+              order: topicIndex,
+            };
+          }),
+        };
+      }),
+    };
+
     try {
-      const res = await axios.post("http://localhost:3001/subjects/create", {
-        subjectName,
-        subjectDesc,
-      });
+      const res = await axios.post(
+        "http://localhost:3001/api/subjects/create",
+        subjectData,
+        {
+          withCredentials: true, // envía cookies de sesión
+        }
+      );
 
       console.log("Materia guardada:", res.data);
       alert("Materia creada correctamente!");
@@ -287,7 +306,12 @@ export default function SubjectForm() {
           <div className="mt-8 flex justify-center w-full">
             <button
               type="submit"
-              className="flex justify-center space-x-2 bg-dark-green p-2 rounded-xl text-white w-5/6"
+              className={`flex justify-center space-x-2 p-2 rounded-xl text-white w-5/6 ${
+                isFormValid()
+                  ? "bg-dark-green hover:bg-dark-green"
+                  : "bg-gray-400 cursor-not-allowed"
+              }`}
+              disabled={!isFormValid()}
             >
               <p>Guardar Materia</p>
               <svg
