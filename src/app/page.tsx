@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import Nav from "./components/nav";
 import Link from "next/link";
-import { getSubjects } from "./services/subjectService";
+import { getProgress, getSubjects } from "./services/subjectService";
+import DoughnutChart from "./components/doughnut";
+import { getProfile } from "./services/authService";
+import Loading from "./components/loading";
 
 interface User {
   nickname?: string;
@@ -33,14 +36,12 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [subjects, setSubjects] = useState<Subject[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [progresses, setProgresses] = useState<{ [key: number]: number }>({});
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch("http://localhost:3001/api/profile", {
-          credentials: "include", // importante para cookies de sesión
-        });
-        const data = await res.json();
+        const data = await getProfile();
         if (data.loggedIn) {
           setUser(data.user);
         } else {
@@ -54,19 +55,40 @@ export default function Home() {
       }
     };
 
+    fetchProfile();
+  }, []);
+
+  useEffect(() => {
     const fetchSubjects = async () => {
       try {
         const data = await getSubjects();
-        console.log(data);
         setSubjects(data);
       } catch (error) {
         console.error("No se pudieron cargar las materias", error);
       }
     };
 
-    fetchProfile();
-    fetchSubjects();
-  }, []);
+    if (user) {
+      fetchSubjects();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const loadProgresses = async () => {
+      if (!subjects) return;
+      const newProgresses: { [key: number]: number } = {};
+      for (const sub of subjects) {
+        const res = await getProgress(sub.id);
+        let count = 0;
+        for (const unit of sub.units) {
+          unit.topics.forEach(() => (count += 1));
+        }
+        newProgresses[sub.id] = Math.round((res / count) * 100) || 0;
+      }
+      setProgresses(newProgresses);
+    };
+    loadProgresses();
+  }, [subjects]);
 
   function capitalizeFirst(str: string | undefined): string {
     if (!str) return ""; // por si la cadena está vacía
@@ -76,7 +98,7 @@ export default function Home() {
   if (loading)
     return (
       <>
-        <p>Cargando</p>
+        <Loading></Loading>
       </>
     );
 
@@ -95,7 +117,7 @@ export default function Home() {
               Login
             </button>
             <a
-              href="http://localhost:3001/login"
+              href="http://localhost:3001/login?screen_hint=signup"
               className="text-center rounded-xl bg-dark-green text-white py-3 w-24"
             >
               Registrate
@@ -131,15 +153,27 @@ export default function Home() {
             <p className="text-xl text-gray-700">Qué estudiaste hoy?</p>
           </div>
         </div>
-        <div className="flex justify-center mt-2">
-          <div className="flex flex-col justify-between bg-gray-300 w-5/6 min-h-96 rounded-xl px-2 py-3 mb-5">
-            <div className="w-full">
+        <div className="relative flex justify-center mt-2">
+          <div className="flex flex-col justify-between bg-gray-300 w-5/6 min-h-96 rounded-xl px-2 py-3 mb-5 h-80 overflow-auto">
+            <div className="w-full mb-10">
               {subjects && subjects.length > 0 ? (
                 <ul>
                   {subjects.map((sub, index) => (
-                    <li key={index} className="p-2 bg-white mb-3 rounded-xl">
-                      <p className="text-xl">{sub.title}</p>
-                      <p className="text-gray-700">{`${sub.units.length} unidades`}</p>
+                    <li key={index}>
+                      <Link
+                        href={`/subject/${index + 1}`}
+                        className="flex justify-between p-2 bg-white mb-3 rounded-xl"
+                      >
+                        <div>
+                          <p className="text-xl">{sub.title}</p>
+                          <p className="text-gray-700">{`${sub.units.length} unidades`}</p>
+                        </div>
+                        <div>
+                          <DoughnutChart
+                            progress={progresses[sub.id] || 0}
+                          ></DoughnutChart>
+                        </div>
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -148,25 +182,27 @@ export default function Home() {
               )}
             </div>
             <div className="w-full flex justify-center">
-              <Link
-                href="/createSubject"
-                className="bg-dark-green rounded-xl p-2 text-white"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="size-6"
+              <div className="flex absolute bottom-8">
+                <Link
+                  href="/subject/create"
+                  className="bg-dark-green rounded-xl p-2 text-white border-1 border-black hover:scale-110 active:scale-110 transition-all duration-300 ease-in-out"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 4.5v15m7.5-7.5h-15"
-                  />
-                </svg>
-              </Link>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    className="size-6"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 4.5v15m7.5-7.5h-15"
+                    />
+                  </svg>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

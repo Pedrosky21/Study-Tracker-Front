@@ -1,28 +1,49 @@
 "use client";
 
-import Nav from "../components/nav";
-import axios from "axios";
-import { useState } from "react";
+import { createSubject, updateSubject } from "@/app/services/subjectService";
+import Nav from "../../components/nav";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import toast, { Toaster } from "react-hot-toast";
 
 type Topic = {
-  id: number;
+  id?: number;
   title: string;
 };
 
 type Unit = {
-  id: number;
+  id?: number;
   title: string;
   topics: Topic[];
 };
 
-export default function SubjectForm() {
-  const [subjectName, setSubjectName] = useState("");
-  const [subjectDesc, setSubjectDesc] = useState("");
+interface Subject {
+  id?: number;
+  title: string;
+  description?: string;
+  units: Unit[];
+}
+
+interface SubjectFormProps {
+  subject?: Subject | null;
+}
+
+export default function SubjectForm({ subject }: SubjectFormProps) {
+  const router = useRouter();
+  const [title, setTitle] = useState(subject?.title || "");
+  const [description, setDescription] = useState(subject?.description || "");
   const [units, setUnits] = useState<Unit[]>([
     { id: 1, title: "", topics: [{ id: 1, title: "" }] },
   ]);
   const [unitCounter, setUnitCounter] = useState(2);
   const [topicCounter, setTopicCounter] = useState(2);
+  const [sendingForm, setSendingForm] = useState(false);
+
+  useEffect(() => {
+    if (subject?.units) {
+      setUnits(subject.units);
+    }
+  }, [subject]);
 
   const addUnit = (unitName: string) => {
     setUnits([...units, { id: unitCounter, title: unitName, topics: [] }]);
@@ -65,7 +86,7 @@ export default function SubjectForm() {
   };
 
   const isFormValid = (): boolean => {
-    if (!subjectName.trim()) return false;
+    if (!title.trim()) return false;
     if (units.length === 0) return false;
 
     for (const unit of units) {
@@ -84,14 +105,16 @@ export default function SubjectForm() {
     e.preventDefault();
 
     const subjectData = {
-      title: subjectName,
-      description: subjectDesc,
+      title: title,
+      description: description,
       units: units.map((unit, unitIndex) => {
         return {
+          id: unit.id,
           title: unit.title,
           order: unitIndex,
           topics: unit.topics.map((topic, topicIndex) => {
             return {
+              id: topic.id,
               title: topic.title,
               order: topicIndex,
             };
@@ -101,19 +124,24 @@ export default function SubjectForm() {
     };
 
     try {
-      const res = await axios.post(
-        "http://localhost:3001/api/subjects/create",
-        subjectData,
-        {
-          withCredentials: true, // envía cookies de sesión
-        }
-      );
-
-      console.log("Materia guardada:", res.data);
-      alert("Materia creada correctamente!");
+      setSendingForm(true);
+      if (subject?.id) {
+        await updateSubject(subject?.id, subjectData);
+        toast.success("Materia editada!");
+        setTimeout(() => {
+          router.push("/");
+        }, 2000);
+      } else {
+        await createSubject(subjectData);
+        toast.success("Materia creada!");
+        setTimeout(() => {
+          router.push("/");
+        }, 2000);
+      }
     } catch (error) {
-      console.error("Error al guardar materia:", error);
-      alert("Hubo un error al guardar la materia");
+      setSendingForm(false);
+      console.error("Error al guardar el Subject", error);
+      toast.error("No pudo guardarse la materia");
     }
   };
 
@@ -129,7 +157,8 @@ export default function SubjectForm() {
             placeholder="Nombre"
             className="outline-2 outline-gray-400 focus:outline-dark-green rounded-xl p-1.5 w-full"
             type="text"
-            onChange={(e) => setSubjectName(e.target.value)}
+            onChange={(e) => setTitle(e.target.value)}
+            value={title}
           />
           <label className="hidden text-dark-green text-xl font-bold">
             Descripcion
@@ -138,7 +167,8 @@ export default function SubjectForm() {
             placeholder="Descripcion"
             className="mt-2 outline-2 outline-gray-400 focus:outline-dark-green rounded-xl p-1.5 w-full h-20"
             type="text"
-            onChange={(e) => setSubjectDesc(e.target.value)}
+            onChange={(e) => setDescription(e.target.value)}
+            value={description}
           />
           <div className="mt-2">
             <h2 className="text-xl">
@@ -147,7 +177,7 @@ export default function SubjectForm() {
             </h2>
             {/** Por unidad */}
             {units.map((unit, unitIndex) => (
-              <div key={unit.id} className="mb-2 border-t-1 py-2">
+              <div key={unitIndex} className="mb-2 border-t-1 py-2">
                 <div className="flex justify-end mb-2">
                   <button type="button" onClick={() => deleteUnit(unitIndex)}>
                     <svg
@@ -202,11 +232,12 @@ export default function SubjectForm() {
                     className="outline-2 outline-gray-400 focus:outline-dark-green rounded-xl p-1.5 w-full h-18"
                     placeholder={`Unidad ${unitIndex + 1}`}
                     onChange={(e) => changeUnitName(unitIndex, e.target.value)}
+                    value={unit.title}
                   />
                 </div>
                 {/** Por temas de la unidad */}
                 {unit.topics.map((topic, topicIndex) => (
-                  <div key={topic.id} className="ml-8 mt-4">
+                  <div key={topicIndex} className="ml-8 mt-4">
                     <div className="flex space-x-1">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -229,10 +260,11 @@ export default function SubjectForm() {
                         onChange={(e) =>
                           changeTopicName(unitIndex, topicIndex, e.target.value)
                         }
+                        value={topic.title}
                       />
                       <button
                         type="button"
-                        onClick={(e) => deleteTopic(unitIndex, topicIndex)}
+                        onClick={() => deleteTopic(unitIndex, topicIndex)}
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -254,11 +286,8 @@ export default function SubjectForm() {
                 ))}
                 <button
                   type="button"
-                  onClick={(e) =>
-                    addTopic(
-                      unitIndex,
-                      `Tema ${units[unitIndex].topics.length + 1}`
-                    )
+                  onClick={() =>
+                    addTopic(unitIndex, `Tema ${unit.topics.length + 1}`)
                   }
                   className="ms-8 mt-2 rounded-xl outline-1 p-1"
                 >
@@ -304,34 +333,45 @@ export default function SubjectForm() {
             </button>
           </div>
           <div className="mt-8 flex justify-center w-full">
-            <button
-              type="submit"
-              className={`flex justify-center space-x-2 p-2 rounded-xl text-white w-5/6 ${
-                isFormValid()
-                  ? "bg-dark-green hover:bg-dark-green"
-                  : "bg-gray-400 cursor-not-allowed"
-              }`}
-              disabled={!isFormValid()}
-            >
-              <p>Guardar Materia</p>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                className="size-6"
+            {!sendingForm ? (
+              <button
+                type="submit"
+                className={`flex justify-center space-x-2 p-2 rounded-xl text-white w-5/6 ${
+                  isFormValid()
+                    ? "bg-dark-green hover:bg-dark-green"
+                    : "bg-gray-400 cursor-not-allowed"
+                }`}
+                disabled={!isFormValid()}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
-                />
-              </svg>
-            </button>
+                <p>Guardar Materia</p>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="size-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+                  />
+                </svg>
+              </button>
+            ) : (
+              <button
+                type="submit"
+                className="flex justify-center space-x-2 p-2 rounded-xl text-white w-5/6 bg-gray-400 cursor-not-allowed"
+                disabled={true}
+              >
+                <p>Guardando materia ...</p>
+              </button>
+            )}
           </div>
         </form>
       </div>
+      <Toaster position="bottom-right"></Toaster>
     </>
   );
 }
