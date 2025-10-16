@@ -148,124 +148,64 @@ export default function SubjectForm({ subject }: SubjectFormProps) {
   return (
     <>
       <Nav></Nav>
-      <div className="w-full pt-5">
-        <form onSubmit={handleSubmit} className="p-4">
-          <label className="block text-dark-green text-xl font-bold">
-            Materia
-          </label>
-          <input
-            placeholder="Nombre"
-            className="outline-2 outline-gray-400 focus:outline-dark-green rounded-xl p-1.5 w-full"
-            type="text"
-            onChange={(e) => setTitle(e.target.value)}
-            value={title}
-          />
-          <label className="hidden text-dark-green text-xl font-bold">
-            Descripcion
-          </label>
-          <input
-            placeholder="Descripcion"
-            className="mt-2 outline-2 outline-gray-400 focus:outline-dark-green rounded-xl p-1.5 w-full h-20"
-            type="text"
-            onChange={(e) => setDescription(e.target.value)}
-            value={description}
-          />
-          <div className="mt-2">
-            <h2 className="text-xl">
-              Agregá tus{" "}
-              <span className="text-dark-green font-bold">unidades</span>
-            </h2>
-            {/** Por unidad */}
-            {units.map((unit, unitIndex) => (
-              <div key={unitIndex} className="mb-2 border-t-1 py-2">
-                <div className="flex justify-end mb-2">
-                  <button type="button" onClick={() => deleteUnit(unitIndex)}>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
-                      className="size-6 text-red-800"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                      />
-                    </svg>
-                  </button>
-                </div>
-                <div className="flex space-x-2">
-                  <div className="flex flex-col justify-between py-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
-                      className="size-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-                      />
-                    </svg>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
-                      className="size-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="m4.5 15.75 7.5-7.5 7.5 7.5"
-                      />
-                    </svg>
-                  </div>
-                  <input
-                    type="text"
-                    className="outline-2 outline-gray-400 focus:outline-dark-green rounded-xl p-1.5 w-full h-18"
-                    placeholder={`Unidad ${unitIndex + 1}`}
-                    onChange={(e) => changeUnitName(unitIndex, e.target.value)}
-                    value={unit.title}
-                  />
-                </div>
-                {/** Por temas de la unidad */}
-                {unit.topics.map((topic, topicIndex) => (
-                  <div key={topicIndex} className="ml-8 mt-4">
-                    <div className="flex space-x-1">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
-                        className="size-6"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-                        />
-                      </svg>
-                      <input
-                        type="text"
-                        placeholder={`Tema ${topicIndex + 1}`}
-                        className="focus:outline-1 focus:outline-dark-green rounded-xl px-2"
-                        onChange={(e) =>
-                          changeTopicName(unitIndex, topicIndex, e.target.value)
-                        }
-                        value={topic.title}
-                      />
+      <div className="w-full pt-5 md:px-20">
+        <form onSubmit={handleSubmit} className="p-4 md:w-full">
+          <div className="md:flex md:justify-between md:space-x-24">
+            <div className="md:w-1/3">
+              <label className="block text-dark-green text-xl font-bold">
+                Materia
+              </label>
+              <input
+                placeholder="Nombre"
+                className="outline-2 outline-gray-400 focus:outline-dark-green rounded-xl p-1.5 w-full"
+                type="text"
+                onChange={(e) => setTitle(e.target.value)}
+                value={title}
+              />
+              <label className="hidden text-dark-green text-xl font-bold">
+                Descripcion
+              </label>
+              <input
+                placeholder="Descripcion"
+                className="mt-2 outline-2 outline-gray-400 focus:outline-dark-green rounded-xl p-1.5 w-full h-20"
+                type="text"
+                onChange={(e) => setDescription(e.target.value)}
+                value={description}
+              />
+            </div>
+            <div className="hidden md:block w-0.5 bg-dark-green"></div>
+            <div className="md:w-2/3">
+              <div className="mt-2 md:mt-0">
+                <h2 className="text-xl">
+                  Agregá tus{" "}
+                  <span className="text-dark-green font-bold">unidades</span>
+                </h2>
+                {/** Por unidad */}
+                {units.map((unit, unitIndex) => (
+                  <div key={unitIndex} className="mb-2 border-t-1 py-2">
+                    <div className="flex justify-end mb-2">
                       <button
                         type="button"
-                        onClick={() => deleteTopic(unitIndex, topicIndex)}
+                        onClick={() => deleteUnit(unitIndex)}
                       >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="1.5"
+                          stroke="currentColor"
+                          className="size-6 text-red-800"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                    <div className="flex space-x-2">
+                      <div className="flex flex-col justify-between py-2">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           fill="none"
@@ -277,27 +217,126 @@ export default function SubjectForm({ subject }: SubjectFormProps) {
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            d="M6 18 18 6M6 6l12 12"
+                            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
                           />
                         </svg>
-                      </button>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="1.5"
+                          stroke="currentColor"
+                          className="size-6"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="m4.5 15.75 7.5-7.5 7.5 7.5"
+                          />
+                        </svg>
+                      </div>
+                      <input
+                        type="text"
+                        className="outline-2 outline-gray-400 focus:outline-dark-green rounded-xl p-1.5 w-full h-18"
+                        placeholder={`Unidad ${unitIndex + 1}`}
+                        onChange={(e) =>
+                          changeUnitName(unitIndex, e.target.value)
+                        }
+                        value={unit.title}
+                      />
                     </div>
+                    {/** Por temas de la unidad */}
+                    {unit.topics.map((topic, topicIndex) => (
+                      <div key={topicIndex} className="ml-8 mt-4">
+                        <div className="flex space-x-1">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth="1.5"
+                            stroke="currentColor"
+                            className="size-6"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                            />
+                          </svg>
+                          <input
+                            type="text"
+                            placeholder={`Tema ${topicIndex + 1}`}
+                            className="focus:outline-1 focus:outline-dark-green rounded-xl px-2"
+                            onChange={(e) =>
+                              changeTopicName(
+                                unitIndex,
+                                topicIndex,
+                                e.target.value
+                              )
+                            }
+                            value={topic.title}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => deleteTopic(unitIndex, topicIndex)}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth="1.5"
+                              stroke="currentColor"
+                              className="size-6"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M6 18 18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        addTopic(unitIndex, `Tema ${unit.topics.length + 1}`)
+                      }
+                      className="ms-8 mt-2 rounded-xl outline-1 p-1"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="1.5"
+                        stroke="currentColor"
+                        className="size-4"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 4.5v15m7.5-7.5h-15"
+                        />
+                      </svg>
+                    </button>
                   </div>
                 ))}
+              </div>
+              <div className="flex justify-end text-white">
                 <button
                   type="button"
-                  onClick={() =>
-                    addTopic(unitIndex, `Tema ${unit.topics.length + 1}`)
-                  }
-                  className="ms-8 mt-2 rounded-xl outline-1 p-1"
+                  className="flex space-x-3 items-center text-center bg-dark-green rounded-xl py-2 px-2"
+                  onClick={() => addUnit(`Unidad ${units.length + 1}`)}
                 >
+                  <p>Agregar Unidad</p>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                     strokeWidth="1.5"
                     stroke="currentColor"
-                    className="size-4"
+                    className="size-6"
                   >
                     <path
                       strokeLinecap="round"
@@ -307,36 +346,13 @@ export default function SubjectForm({ subject }: SubjectFormProps) {
                   </svg>
                 </button>
               </div>
-            ))}
-          </div>
-          <div className="flex justify-end text-white">
-            <button
-              type="button"
-              className="flex space-x-3 items-center text-center bg-dark-green rounded-xl py-2 px-2"
-              onClick={() => addUnit(`Unidad ${units.length + 1}`)}
-            >
-              <p>Agregar Unidad</p>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                className="size-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 4.5v15m7.5-7.5h-15"
-                />
-              </svg>
-            </button>
+            </div>
           </div>
           <div className="mt-8 flex justify-center w-full">
             {!sendingForm ? (
               <button
                 type="submit"
-                className={`flex justify-center space-x-2 p-2 rounded-xl text-white w-5/6 ${
+                className={`flex justify-center space-x-2 p-2 rounded-xl text-white w-5/6 md:w-64 md:text-xl ${
                   isFormValid()
                     ? "bg-dark-green hover:bg-dark-green"
                     : "bg-gray-400 cursor-not-allowed"
